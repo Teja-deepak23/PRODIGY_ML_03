@@ -1,0 +1,47 @@
+import numpy as np
+import pandas as pd
+import os
+import cv2
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.preprocessing import LabelBinarizer
+from sklearn.pipeline import make_pipeline
+from sklearn.decomposition import PCA
+# Set the paths to the dataset
+train_dir = 'path/to/train'  # Adjust this path to your training images
+
+# List all image files in the directory
+images = os.listdir(train_dir)
+# Define image size and initialize lists for features and labels
+img_size = (64, 64)  # You can adjust this size based on your needs
+X = []
+y = []
+
+# Process each image
+for img in images:
+    # Read image and resize it
+    img_path = os.path.join(train_dir, img)
+    image = cv2.imread(img_path)
+    image = cv2.resize(image, img_size)
+    
+    # Append image data and label (0 for cat, 1 for dog)
+    X.append(image.flatten())  # Flatten the image to a vector
+    label = 1 if 'dog' in img else 0  # Assuming filenames contain 'cat' or 'dog'
+    y.append(label)
+
+# Convert to numpy arrays
+X = np.array(X)
+y = np.array(y)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Create an SVM model with PCA for dimensionality reduction (optional)
+svm_model = make_pipeline(PCA(n_components=50), SVC(kernel='linear', random_state=42))
+
+# Train the model on the training data
+svm_model.fit(X_train, y_train)
+# Make predictions on the test set
+y_pred = svm_model.predict(X_test)
+
+# Evaluate the model's performance
+print(confusion_matrix(y_test, y_pred))
+print(classification_report(y_test, y_pred))
